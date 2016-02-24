@@ -2,6 +2,7 @@
 
 import template from 'babel-template'
 import nameFunction from 'babel-helper-function-name'
+import { realpathSync } from 'fs'
 
 const coverageTemplate = template(`
   var GLOBAL = (new Function('return this'))()
@@ -9,11 +10,20 @@ const coverageTemplate = template(`
   var FILE_COVERAGE = COVERAGE[PATH] = GLOBAL['JSON'].parse(INITIAL)
 `)
 
+function getRealpath (n) {
+  try {
+    return realpathSync(n) || n
+  } catch (e) {
+    return n
+  }
+}
+
 module.exports = function ({ types: t }) {
   function getData (context) {
+    const path = getRealpath(context.file.opts.filename)
     return context.file.__coverage__data || (context.file.__coverage__data = {
       base: {
-        path: context.file.opts.filename,
+        path: path,
         s: { },
         b: { },
         f: { },
@@ -188,11 +198,12 @@ module.exports = function ({ types: t }) {
           getData(this).id = path.scope.generateUidIdentifier('__coverage__file')
         },
         exit (path) {
+          const realPath = getRealpath(this.file.opts.filename)
           path.node.body.unshift(...coverageTemplate({
             GLOBAL: path.scope.generateUidIdentifier('__coverage__global'),
             COVERAGE: path.scope.generateUidIdentifier('__coverage__object'),
             FILE_COVERAGE: getData(this).id,
-            PATH: t.stringLiteral(this.file.opts.filename),
+            PATH: t.stringLiteral(realPath),
             INITIAL: t.stringLiteral(JSON.stringify(getData(this).base))
           }))
         }
