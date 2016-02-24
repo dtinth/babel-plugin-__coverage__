@@ -3,12 +3,13 @@ process.once('exit', () => {
   const istanbul = require('istanbul')
   const collector = new istanbul.Collector()
   const reporter = new istanbul.Reporter()
+  /* global __coverage__ */
   collector.add(__coverage__)
   reporter.addAll([ 'text', 'lcov' ])
   reporter.write(collector, true, () => { })
 })
 
-/* global __coverage__, describe, it, after */
+/* global describe, it */
 describe('test', function () {
   const __coverage__Plugin = require('./lib-cov')
 
@@ -25,10 +26,5 @@ describe('test', function () {
 
   it('can run jsx fixture', function () {
     require('./fixtures/react')
-  })
-
-  after(function () {
-    require('fs').writeFileSync('coverage.json', JSON.stringify(__coverage__))
-    void __coverage__
   })
 })
