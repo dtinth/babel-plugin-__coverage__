@@ -7,3 +7,25 @@ babel-plugin-\_\_coverage\_\_
 
 A Babel plugin that instruments your code with `__coverage__` variable.
 The resulting `__coverage__` object is compatible with Istanbul!
+
+## Usage
+
+Install it:
+
+```
+npm install --save-dev babel-plugin-__coverage__
+```
+
+Add to `.babelrc` in test mode:
+
+```js
+{
+  "env": {
+    "test": {
+      "plugins": [ "__coverage__" ]
+    }
+  }
+}
+```
+
+It should just work with karma coverage reporter.
