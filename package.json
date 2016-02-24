@@ -8,8 +8,7 @@
     "clean": "rm -rf lib; rm -rf lib-cov",
     "mocha": "env NODE_ENV=test mocha",
     "prepublish": "npm run clean && npm run build",
-    "report-coverage": "istanbul report",
-    "test": "npm run clean && npm run build && env BABEL_DISABLE_CACHE=1 ./node_modules/.bin/babel src --plugins ./lib/index -d lib-cov && npm run mocha && npm run report-coverage"
+    "test": "npm run clean && npm run build && env BABEL_DISABLE_CACHE=1 ./node_modules/.bin/babel src --plugins ./lib/index -d lib-cov && npm run mocha"
   },
   "author": "Thai Pangsakulyanont <org.yi.dttvb@gmail.com> (http://dt.in.th/)",
   "license": "MIT",
@@ -31,6 +30,7 @@
     "standard": "^6.0.7"
   },
   "dependencies": {
-    "babel-helper-function-name": "^6.5.0"
+    "babel-helper-function-name": "^6.5.0",
+    "babel-template": "^6.5.0"
   }
 }
