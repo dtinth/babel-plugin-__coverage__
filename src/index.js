@@ -11,7 +11,7 @@ const coverageTemplate = template(`
 
 module.exports = function ({ types: t }) {
   function getData (context) {
-    return context.__coverage__data || (context.__coverage__data = {
+    return context.file.__coverage__data || (context.file.__coverage__data = {
       base: {
         path: context.file.opts.filename,
         s: { },

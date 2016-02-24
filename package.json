@@ -4,10 +4,12 @@
   "description": "Babel 6.x plugin to add instrument code with Istanbul-compatible `__coverage__` variable.",
   "main": "index.js",
   "scripts": {
-    "build": "./node_modules/.bin/babel src -d lib",
-    "test": "NODE_ENV=test ./node_modules/.bin/babel src -d lib",
-    "clean": "rm -rf lib",
-    "prepublish": "npm run clean && npm run build"
+    "build": "NODE_ENV=development ./node_modules/.bin/babel src -d lib",
+    "clean": "rm -rf lib; rm -rf lib-cov",
+    "mocha": "env NODE_ENV=test mocha",
+    "prepublish": "npm run clean && npm run build",
+    "report-coverage": "istanbul report",
+    "test": "npm run clean && npm run build && ./node_modules/.bin/babel src --plugins ./lib/index -d lib-cov && npm run mocha && npm run report-coverage"
   },
   "author": "Thai Pangsakulyanont <org.yi.dttvb@gmail.com> (http://dt.in.th/)",
   "license": "MIT",
@@ -16,7 +18,12 @@
     "babel-cli": "^6.5.1",
     "babel-core": "^6.5.2",
     "babel-preset-es2015": "^6.5.0",
+    "babel-preset-react": "^6.5.0",
+    "babel-register": "^6.5.2",
     "istanbul": "^0.4.2",
+    "mocha": "^2.4.5",
+    "react": "^0.14.7",
+    "react-dom": "^0.14.7",
     "standard": "^6.0.7"
   },
   "dependencies": {
