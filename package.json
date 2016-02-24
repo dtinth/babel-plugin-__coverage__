@@ -13,6 +13,9 @@
   },
   "author": "Thai Pangsakulyanont <org.yi.dttvb@gmail.com> (http://dt.in.th/)",
   "license": "MIT",
+  "files": [
+    "lib"
+  ],
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-cli": "^6.5.1",
