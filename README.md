@@ -93,8 +93,10 @@ However, I tried using this in some bigger projects, such as [bemusic/bemuse](ht
 
 ### Is the resulting coverage differ from Istanbul/Isparta?
 
-Since most coverage service only cares about statement coverage, but sometimes there’s so much logic in a single statement (usually due to functional programming techniques), and I want coverage numbers to be very frank,
-`babel-plugin-__coverage__`, also treats certain expression as statements.
+Sometimes there’s so much logic in a single statement (usually due to functional programming techniques),
+it is very likely that not every part of a statement will be covered by tests (see picture below).
+Since most coverage service only cares about statement coverage,and I want coverage numbers to be very frank,
+`babel-plugin-__coverage__` will treat certain expressions as statements.
 
 Most likely, this means __if you switch to this plugin your coverage percentage will most likely go down__ compared to when you were using Istanbul or Isparta. But if you use a lot of arrow functions, this means your coverage will be more accurate! Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
 
