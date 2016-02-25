@@ -61,7 +61,7 @@ Configure Mocha to transpile JavaScript code using Babel, then you can run your 
 Isparta is currently the de-facto tool for measuring coverage against ES6 code, which extends Istanbul with ES6 support through Babel. It works very well so far, but then I hit some walls with it.
 
 So I’ve been trying to get webpack 2 to work with Istanbul/Isparta.
-To benefit from [webpack 2’s with tree shaking](http://www.2ality.com/2015/12/webpack-tree-shaking.html), I need to keep `import` and `export` statements in JavaScript file intact. I can’t get code coverage to work. Inspecting Isparta’s [source code](https://github.com/douglasduteil/isparta/blob/749862a7d1810dd25b8c62c9e613720b57d36da1/src/instrumenter.js), here’s what it does:
+To benefit from [webpack 2’s with tree shaking](http://www.2ality.com/2015/12/webpack-tree-shaking.html), I need to keep `import` and `export` statements in my ES6 modules intact. However, with this setup I can’t get code coverage to work. Inspecting Isparta’s [source code](https://github.com/douglasduteil/isparta/blob/749862a7d1810dd25b8c62c9e613720b57d36da1/src/instrumenter.js) reveals how it works:
 
 1. It uses Babel to transpile ES6 back into ES5, saving the source map.
 2. It uses Istanbul to instrument the transpiled source code. This produces some initial metadata (in a global variable called `__coverage__`) which contains the location of each statement, branch, and function. Unfortunately, these mapings are mapped to the transpiled code. Therefore,
@@ -71,16 +71,16 @@ To benefit from [webpack 2’s with tree shaking](http://www.2ality.com/2015/12/
 Since transforming `import`/`export` statements has now been disabled, instrumentation now dies at step 2, because the Esprima that Istanbul is using cannot process `import`/`export` statements.
 
 So I looked for something else, and I found [babel-plugin-transform-adana](https://github.com/adana-coverage/babel-plugin-transform-adana). I tried it out immediately.
-It turns out that although adana also generates the `__coverage__` variable, it is in its own format. This means that most tools that works with Istanbul-format coverage data (including `karma-coverage` and `nyc`) will not work with this. Tools need to be reinvented for each test harness.
+It turns out that although adana also generates the `__coverage__` variable, it uses its own format which is not compatible with most existing tools (e.g. `istanbul`’s reporter, `karma-coverage` and `nyc`). Tools need to be reinvented for each test harness.
 
-So I went back to use Webpack 1 for the time being.
+So I went back to use webpack 1 for the time being.
 
 Now, with lots of tools to help developers author Babel 6 plugins,
 such as [the Babel Handbook](https://github.com/thejameskyle/babel-handbook) and [the AST Explorer](https://astexplorer.net/), it’s not that hard to create Babel plugins today. So I gave it a shot. This is my first Babel plugin.
 
-It turns out that I can create a rudimentary instrumenter with Babel 6 in roughly 300 lines of code (compare to 1,000 in Istanbul). Babel has A LOT of cool stuff to make transpilation easy, from [babel-template](https://github.com/babel/babel/tree/master/packages/babel-template) to [babel-traverse](https://github.com/babel/babel/tree/master/packages/babel-traverse) to [babel-helper-function-name](https://github.com/babel/babel/tree/master/packages/babel-helper-function-name). Babel’s convenient API also handles a lot of edge cases automatically. For example, if a function begins with `'use strict'` statement, prepending a statement into its body will insert it _after_ the `'use strict'` statement. It also automatically convert `if`/`while`/`for` body into a `BlockStatement` when a statement is inserted before the body.
+It turns out that I can create a rudimentary instrumenter with Babel 6 in roughly 300 LOC (compare to Istanbul’s instrumenter which has ~1,000 LOC). Babel has A LOT of cool stuff to make transpilation easy, from [babel-template](https://github.com/babel/babel/tree/master/packages/babel-template) to [babel-traverse](https://github.com/babel/babel/tree/master/packages/babel-traverse) to [babel-helper-function-name](https://github.com/babel/babel/tree/master/packages/babel-helper-function-name). Babel’s convenient API also handles a lot of edge cases automatically. For example, if a function begins with `'use strict'` statement, prepending a statement into its body will insert it _after_ the `'use strict'` statement. It also transparently converts `if (a) b` into `if (a) { b }` if I want to insert another statement before or after `b`.
 
-I haven’t tested this with Webpack 2 yet.
+I haven’t tested this with webpack 2 yet.
 
 
 ### Is it stable?
@@ -88,7 +88,7 @@ I haven’t tested this with Webpack 2 yet.
 Well, I wrote most of it in two nights and have only tested some basic stuffs.
 So speaking in terms of maturity, this one is very new.
 
-However, I tried using this in some bigger projects, such as [bemusic/bemuse](https://github.com/bemusic/bemuse) (which contains around 2400 statements). It works with only few problems which have been fixed, and now it works fine.
+However, I tried using this in some bigger projects, such as [bemusic/bemuse](https://github.com/bemusic/bemuse) (which contains around 2400 statements). It works, with only few problems (which have now been fixed), and now it works fine.
 
 
 ### How do I ignore branches/statements?
@@ -111,7 +111,7 @@ Since most coverage service only cares about statement coverage, but sometimes t
     //                          <-------> S4
     ```
 
-2. Logical operator’s right hand side expression is treated as a statement, because it may be shrot-circuited.
+2. Logical operator’s right hand side expression is treated as a statement, because it may be short-circuited.
 
     ```js
        const value = a + b || a - b
@@ -136,15 +136,16 @@ Since most coverage service only cares about statement coverage, but sometimes t
     //                               <----------> S2
     ```
 
-Most likely, this means your coverage percentage will go down, compared to when you were using Istanbul or Isparta. Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
+Most likely, this means __if you switch to this plugin your coverage percentage will most likely go down__ compared to when you were using Istanbul or Isparta. But if you use a lot of arrow functions, this means your coverage will be more accurate! Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
 
 ![Imgur](http://i.imgur.com/PX0s8Hy.png)
+
 
 ### How do I ignore certain files?
 
 Well, [Codecov](https://codecov.io/) allows you to ignore files from their web interface, so if you’re using that, then that’s the easiest way!
 
-Oh yeah if you use webpack, you can set up two loaders.
+If you use webpack, you can set up two loaders.
 One for your production code (with this plugin enabled), and another for your test code (without this plugin).
 
 And if you’re using Babel, you can precompile your production code with coverage enabled into another directory like `babel src --plugins __coverage__ -d lib-cov` and tell your tests to redirect to that instead.
