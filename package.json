@@ -32,5 +32,21 @@
   "dependencies": {
     "babel-helper-function-name": "^6.5.0",
     "babel-template": "^6.5.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dtinth/babel-plugin-__coverage__.git"
+  },
+  "keywords": [
+    "babel",
+    "coverage",
+    "istanbul",
+    "tdd",
+    "unit",
+    "test"
+  ],
+  "bugs": {
+    "url": "https://github.com/dtinth/babel-plugin-__coverage__/issues"
+  },
+  "homepage": "https://github.com/dtinth/babel-plugin-__coverage__#readme"
 }
