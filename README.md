@@ -91,15 +91,16 @@ So speaking in terms of maturity, this one is very new.
 However, I tried using this in some bigger projects, such as [bemusic/bemuse](https://github.com/bemusic/bemuse) (which contains around 2400 statements). It works, with only few problems (which have now been fixed), and now it works fine.
 
 
-### How do I ignore branches/statements?
-
-I haven’t implemented it. I once [posted an issue on Isparta](https://github.com/douglasduteil/isparta/issues/24) asking about ignoring statements in Isparta (which is now fixed). But nowadays I just think that “coverage is just a number,” so I don’t need them anymore. If you want it, pull requests are welcome!
-
-
 ### Is the resulting coverage differ from Istanbul/Isparta?
 
 Since most coverage service only cares about statement coverage, but sometimes there’s so much logic in a single statement (usually due to functional programming techniques), and I want coverage numbers to be very frank,
 `babel-plugin-__coverage__`, also treats certain expression as statements.
+
+Most likely, this means __if you switch to this plugin your coverage percentage will most likely go down__ compared to when you were using Istanbul or Isparta. But if you use a lot of arrow functions, this means your coverage will be more accurate! Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
+
+![Imgur](http://i.imgur.com/PX0s8Hy.png)
+
+Here are some notable differences:
 
 1. Arrow function expression body is treated as a statement, because its body may never be evaluated.
 
@@ -136,9 +137,11 @@ Since most coverage service only cares about statement coverage, but sometimes t
     //                               <----------> S2
     ```
 
-Most likely, this means __if you switch to this plugin your coverage percentage will most likely go down__ compared to when you were using Istanbul or Isparta. But if you use a lot of arrow functions, this means your coverage will be more accurate! Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
 
-![Imgur](http://i.imgur.com/PX0s8Hy.png)
+### How do I ignore branches/statements?
+
+I haven’t implemented it. I once [posted an issue on Isparta](https://github.com/douglasduteil/isparta/issues/24) asking about ignoring statements in Isparta (which is now fixed). But nowadays I just think that “coverage is just a number,” so I don’t need them anymore. If you want it, pull requests are welcome!
+
 
 
 ### How do I ignore certain files?
