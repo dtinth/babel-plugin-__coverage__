@@ -1,6 +1,6 @@
 {
   "name": "babel-plugin-__coverage__",
-  "version": "0.1.11111",
+  "version": "0.11.0",
   "description": "Babel 6.x plugin to add instrument code with Istanbul-compatible `__coverage__` variable.",
   "main": "lib/index.js",
   "scripts": {
@@ -16,7 +16,9 @@
     "lib"
   ],
   "nyc": {
-    "include": [ "/" ]
+    "include": [
+      "/"
+    ]
   },
   "devDependencies": {
     "babel": "^6.5.2",
