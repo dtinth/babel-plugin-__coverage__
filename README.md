@@ -136,6 +136,8 @@ Since most coverage service only cares about statement coverage, but sometimes t
     //                               <----------> S2
     ```
 
+Most likely, this means your coverage percentage will do down compared to when you were using Istanbul or Isparta.
+
 ### How do I ignore certain files?
 
 Well, [Codecov](https://codecov.io/) allows you to ignore files from their web interface, so if you’re using that, then that’s the easiest way!
