@@ -138,9 +138,7 @@ Since most coverage service only cares about statement coverage, but sometimes t
 
 Most likely, this means your coverage percentage will do down compared to when you were using Istanbul or Isparta. Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
 
-![Before](http://i.imgur.com/cRdmRcG.png)
-
-![After](http://i.imgur.com/BbOFPpY.png)
+![Imgur](http://i.imgur.com/PX0s8Hy.png)
 
 ### How do I ignore certain files?
 
