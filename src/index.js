@@ -210,9 +210,10 @@ module.exports = function ({ types: t }) {
     const node = path.node
     const data = getData(this)
     const id = String(data.nextId.f++)
+    const nameOf = namedNode => namedNode && namedNode.id && namedNode.id.name || null
     data.base.f[id] = 0
     data.base.fnMap[id] = {
-      name: nameFunction(path), // I love Babel!
+      name: nameOf(nameFunction(path)), // I love Babel!
       line: node.loc.start.line,
       loc: locToObject(node.loc)
     }
