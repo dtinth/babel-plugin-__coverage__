@@ -98,7 +98,7 @@ I haven’t implemented it. I once [posted an issue on Isparta](https://github.c
 
 ### Is the resulting coverage differ from Istanbul/Isparta?
 
-Since most coverage service only cares about statement coverage, but sometimes there’s so much logic in a single statement, and I want coverage numbers to be very frank,
+Since most coverage service only cares about statement coverage, but sometimes there’s so much logic in a single statement (usually due to functional programming techniques), and I want coverage numbers to be very frank,
 `babel-plugin-__coverage__`, also treats certain expression as statements.
 
 1. Arrow function expression body is treated as a statement, because its body may never be evaluated.
@@ -136,7 +136,11 @@ Since most coverage service only cares about statement coverage, but sometimes t
     //                               <----------> S2
     ```
 
-Most likely, this means your coverage percentage will do down compared to when you were using Istanbul or Isparta.
+Most likely, this means your coverage percentage will do down compared to when you were using Istanbul or Isparta. Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
+
+![Before](http://i.imgur.com/cRdmRcG.png)
+
+![After](http://i.imgur.com/BbOFPpY.png)
 
 ### How do I ignore certain files?
 
