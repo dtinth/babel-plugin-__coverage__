@@ -136,7 +136,7 @@ Since most coverage service only cares about statement coverage, but sometimes t
     //                               <----------> S2
     ```
 
-Most likely, this means your coverage percentage will do down compared to when you were using Istanbul or Isparta. Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
+Most likely, this means your coverage percentage will go down, compared to when you were using Istanbul or Isparta. Here’s an example from the [bemusic/bemuse](https://github.com/bemusic/bemuse) project:
 
 ![Imgur](http://i.imgur.com/PX0s8Hy.png)
 
