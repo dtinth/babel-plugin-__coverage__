@@ -1,14 +1,4 @@
 
-process.once('exit', () => {
-  const istanbul = require('istanbul')
-  const collector = new istanbul.Collector()
-  const reporter = new istanbul.Reporter()
-  /* global __coverage__ */
-  collector.add(__coverage__)
-  reporter.addAll([ 'text', 'lcov' ])
-  reporter.write(collector, true, () => { })
-})
-
 /* global describe, it */
 describe('test', function () {
   const __coverage__Plugin = require('./lib-cov')

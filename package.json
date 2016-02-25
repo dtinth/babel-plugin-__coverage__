@@ -8,13 +8,16 @@
     "clean": "rm -rf lib; rm -rf lib-cov",
     "mocha": "env NODE_ENV=test mocha",
     "prepublish": "npm run clean && npm run build",
-    "test": "npm run clean && npm run build && env BABEL_DISABLE_CACHE=1 ./node_modules/.bin/babel src --plugins ./lib/index -d lib-cov && npm run mocha"
+    "test": "npm run clean && npm run build && env BABEL_DISABLE_CACHE=1 ./node_modules/.bin/babel src --plugins ./lib/index -d lib-cov && nyc npm run mocha"
   },
   "author": "Thai Pangsakulyanont <org.yi.dttvb@gmail.com> (http://dt.in.th/)",
   "license": "MIT",
   "files": [
     "lib"
   ],
+  "nyc": {
+    "include": [ "/" ]
+  },
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-cli": "^6.5.1",
@@ -25,6 +28,7 @@
     "codecov": "^1.0.1",
     "istanbul": "^0.4.2",
     "mocha": "^2.4.5",
+    "nyc": "^5.6.0",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
     "standard": "^6.0.7"
@@ -42,8 +46,8 @@
     "coverage",
     "istanbul",
     "tdd",
-    "unit",
-    "test"
+    "test",
+    "unit"
   ],
   "bugs": {
     "url": "https://github.com/dtinth/babel-plugin-__coverage__/issues"
