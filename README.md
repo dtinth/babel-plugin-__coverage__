@@ -1,7 +1,8 @@
 
-babel-plugin-\_\_coverage\_\_
+![babel-plugin-\_\_coverage\_\_](http://i.imgur.com/WNq6pvg.png)
 =============================
 
+[![npm version](https://badge.fury.io/js/babel-plugin-__coverage__.svg)](https://badge.fury.io/js/babel-plugin-__coverage__)
 [![Build Status](https://travis-ci.org/dtinth/babel-plugin-__coverage__.svg?branch=master)](https://travis-ci.org/dtinth/babel-plugin-__coverage__)
 [![codecov.io](https://codecov.io/github/dtinth/babel-plugin-__coverage__/coverage.svg?branch=master)](https://codecov.io/github/dtinth/babel-plugin-__coverage__?branch=master)
 
