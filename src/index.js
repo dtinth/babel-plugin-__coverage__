@@ -306,6 +306,7 @@ module.exports = function ({ types: t }) {
       ConditionalExpression: coverConditionalExpression,
       LogicalExpression: coverLogicalExpression,
       AssignmentPattern: coverAssignmentPattern,
+      ExportDefaultDeclaration: coverStatement,
 
       Program: {
         enter (path) {
