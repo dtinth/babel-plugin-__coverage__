@@ -102,7 +102,9 @@ module.exports = function ({ types: t }) {
   // - If it’s an expression (`x`), turns into `(++coverage, x)`.
   //
   function instrument (path, increment) {
-    if (path.isStatement()) {
+    if (path.isBlockStatement()) {
+      path.node.body.unshift(t.expressionStatement(increment))
+    } else if (path.isStatement()) {
       path.insertBefore(t.expressionStatement(increment))
     } else if (path.isExpression()) {
       path.replaceWith(t.sequenceExpression([ increment, path.node ]))
@@ -171,15 +173,28 @@ module.exports = function ({ types: t }) {
   //
   function coverIfStatement (path) {
     if (!path.node.loc) return
-    instrumentStatement(this, path)
-    if (!path.get('consequent').node) path.set('consequent', t.emptyStatement())
-    if (!path.get('alternate').node) path.set('alternate', t.emptyStatement())
+    const loc0 = path.node.loc
     const node = path.node
-    const loc1 = node.consequent.loc || node.loc
-    const loc2 = node.alternate.loc || loc1
-    const id = nextBranchId(this, node.loc.start.line, 'if', [ loc1, loc2 ])
+    makeBlock(path.get('consequent'))
+    makeBlock(path.get('alternate'))
+    const loc1 = node.consequent && node.consequent.loc || loc0
+    const loc2 = node.alternate && node.alternate.loc || loc1
+    const id = nextBranchId(this, loc0.start.line, 'if', [ loc1, loc2 ])
     instrument(path.get('consequent'), increase(this, 'b', id, 0))
     instrument(path.get('alternate'), increase(this, 'b', id, 1))
+    instrumentStatement(this, path)
+  }
+
+  //
+  // Turns path into block.
+  //
+  function makeBlock (path) {
+    if (!path.node) {
+      return path.replaceWith(t.blockStatement([ ]))
+    }
+    if (!path.isBlockStatement()) {
+      return path.replaceWith(t.blockStatement([ path.node ]))
+    }
   }
 
   //
@@ -204,8 +219,18 @@ module.exports = function ({ types: t }) {
   // Because the increment may be stopped in the first iteration due to `break`.
   //
   function coverForStatement (path) {
+    makeBlock(path.get('body'))
     instrumentStatement(this, path)
     instrumentStatement(this, path.get('update'))
+  }
+
+  //
+  // Turn the body into block. This fixes some really weird edge cases where
+  // `while (x) if (y) z` is missing coverage on `z`.
+  //
+  function coverLoopStatement (path) {
+    makeBlock(path.get('body'))
+    instrumentStatement(this, path)
   }
 
   //
@@ -279,34 +304,43 @@ module.exports = function ({ types: t }) {
     instrumentStatement(this, path.get('right'))
   }
 
+  const coverWith = (process.env.BABEL_PLUGIN__COVERAGE__TEST
+    // Defer execution so we can measure coverage easily.
+    ? f => function () { return f().apply(this, arguments) }
+    // Execute immediately so it runs faster at runtime.
+    // NOTE: This case should have already been covered due to
+    //       self-instrumentation to generate `lib-cov`.
+    : f => f()
+  )
+
   return {
     visitor: {
       //
       // Shamelessly copied from istanbul.
       //
-      ExpressionStatement: coverStatement,
-      BreakStatement: coverStatement,
-      ContinueStatement: coverStatement,
-      DebuggerStatement: coverStatement,
-      ReturnStatement: coverStatement,
-      ThrowStatement: coverStatement,
-      TryStatement: coverStatement,
-      VariableDeclarator: coverVariableDeclarator,
-      IfStatement: coverIfStatement,
-      ForStatement: coverForStatement,
-      ForInStatement: coverStatement,
-      ForOfStatement: coverStatement,
-      WhileStatement: coverStatement,
-      DoWhileStatement: coverStatement,
-      SwitchStatement: coverSwitchStatement,
-      ArrowFunctionExpression: coverFunction,
-      FunctionExpression: coverFunction,
-      FunctionDeclaration: coverFunction,
-      LabeledStatement: coverStatement,
-      ConditionalExpression: coverConditionalExpression,
-      LogicalExpression: coverLogicalExpression,
-      AssignmentPattern: coverAssignmentPattern,
-      ExportDefaultDeclaration: coverStatement,
+      ExpressionStatement: coverWith(() => coverStatement),
+      BreakStatement: coverWith(() => coverStatement),
+      ContinueStatement: coverWith(() => coverStatement),
+      DebuggerStatement: coverWith(() => coverStatement),
+      ReturnStatement: coverWith(() => coverStatement),
+      ThrowStatement: coverWith(() => coverStatement),
+      TryStatement: coverWith(() => coverStatement),
+      VariableDeclarator: coverWith(() => coverVariableDeclarator),
+      IfStatement: coverWith(() => coverIfStatement),
+      ForStatement: coverWith(() => coverForStatement),
+      ForInStatement: coverWith(() => coverLoopStatement),
+      ForOfStatement: coverWith(() => coverLoopStatement),
+      WhileStatement: coverWith(() => coverLoopStatement),
+      DoWhileStatement: coverWith(() => coverStatement),
+      SwitchStatement: coverWith(() => coverSwitchStatement),
+      ArrowFunctionExpression: coverWith(() => coverFunction),
+      FunctionExpression: coverWith(() => coverFunction),
+      FunctionDeclaration: coverWith(() => coverFunction),
+      LabeledStatement: coverWith(() => coverStatement),
+      ConditionalExpression: coverWith(() => coverConditionalExpression),
+      LogicalExpression: coverWith(() => coverLogicalExpression),
+      AssignmentPattern: coverWith(() => coverAssignmentPattern),
+      ExportDefaultDeclaration: coverWith(() => coverStatement),
 
       Program: {
         enter (path) {

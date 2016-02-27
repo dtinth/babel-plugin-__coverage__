@@ -16,28 +16,6 @@ describe('test', function () {
   process.env.BABEL_DISABLE_CACHE = true
   require('babel-register')(BABEL_OPTIONS)
 
-  it('can run basic fixture', function () {
-    require('./fixtures/basic')
-  })
-
-  it('can run jsx fixture', function () {
-    require('./fixtures/react')
-  })
-
-  it('can haz arrow funktions', function () {
-    require('./fixtures/arrows')
-  })
-
-  it('can haz defualt paramitrz', function () {
-    const lib = require('./fixtures/default')
-    lib.add(10, 20)
-    lib.multiply(10, 20)
-  })
-
-  it('can DESTRUCTUR', function () {
-    require('./fixtures/destruct')
-  })
-
   describe('statement coverage', function () {
     describe('variable declartions', function () {
       testStatementCoverage('const x = 0', 1)
@@ -67,25 +45,67 @@ describe('test', function () {
       testStatementCoverage('const [ a = 1, b = 2, c = 3 ] = [ ]', 4)
     })
 
-    function testStatementCoverage (code, expected) {
-      it('`' + code + '` -> ' + expected, function () {
-        const coverageData = extractCoverageData(code).s
-        assert.equal(Object.keys(coverageData).length, expected)
-      })
-    }
+    describe('loop', function () {
+      testStatementCoverage('for (const x in y) break', 2)
+      testStatementCoverage('for (const x of y) break', 2)
+      testStatementCoverage('while (true !== false) break', 2)
+      testStatementCoverage('do { break } while (true)', 2)
+      // testStatementCoverage('for (x in y) if (!y[x]) continue', 2)
+    })
+
+    describe('nested', function () {
+      testStatementCoverage('if (x) if (y) z', 3)
+      testStatementCoverage('while (x) if (y) break', 3)
+      testStatementCoverage('for (a; b; c) if (y) break', 4)
+    })
   })
 
-  it('does not choke on bemuse codebase', function () {
-    Babel.transformFileSync(require.resolve('./fixtures/expression'), BABEL_OPTIONS)
-  })
+  describe('integrated tests', function () {
+    it('can run basic fixture', function () {
+      require('./fixtures/basic')
+    })
 
-  it('does not affect strictness of function', function () {
-    console.log(require('./fixtures/strictFunction').toString())
+    it('can run jsx fixture', function () {
+      require('./fixtures/react')
+    })
+
+    it('can haz arrow funktions', function () {
+      require('./fixtures/arrows')
+    })
+
+    it('can haz defualt paramitrz', function () {
+      const lib = require('./fixtures/default')
+      lib.add(10, 20)
+      lib.multiply(10, 20)
+    })
+
+    it('can DESTRUCTUR', function () {
+      require('./fixtures/destruct')
+    })
+
+    it('does not choke on bemuse codebase', function () {
+      Babel.transformFileSync(require.resolve('./fixtures/expression'), BABEL_OPTIONS)
+    })
+
+    it('does not affect strictness of function', function () {
+      assert.ok(require('./fixtures/strictFunction').toString().match(/\{\s*['"]use strict/))
+    })
+
+    it('works with label statement', function () {
+      assert.equal(require('./fixtures/label'), 1)
+    })
   })
 
   // ---------------------------------------------------------------------------
   // Helper functions.
   // ---------------------------------------------------------------------------
+
+  function testStatementCoverage (code, expected) {
+    it('`' + code + '` -> ' + expected, function () {
+      const coverageData = extractCoverageData(code).s
+      assert.equal(Object.keys(coverageData).length, expected)
+    })
+  }
 
   // Very crude hack to parse coverage data from the source map!!
   function extractCoverageData (code) {
