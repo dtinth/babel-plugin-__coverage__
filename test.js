@@ -50,7 +50,9 @@ describe('test', function () {
       testStatementCoverage('for (const x of y) break', 2)
       testStatementCoverage('while (true !== false) break', 2)
       testStatementCoverage('do { break } while (true)', 2)
-      // testStatementCoverage('for (x in y) if (!y[x]) continue', 2)
+      testStatementCoverage('for (x in y) if (!y[x]) continue', 3)
+      testStatementCoverage('for (x in y) if (unexpected(x)) debugger', 3)
+      testStatementCoverage('if (unexpected(x)) for (var x in y) try { throw new Error("wtf") } finally { }', 4)
     })
 
     describe('nested', function () {
