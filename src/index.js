@@ -9,9 +9,16 @@ import nameFunction from 'babel-helper-function-name'
 import { realpathSync } from 'fs'
 
 const coverageTemplate = template(`
-  var GLOBAL = (new Function('return this'))()
-  var COVERAGE = GLOBAL['__coverage__'] || (GLOBAL['__coverage__'] = { })
-  var FILE_COVERAGE = COVERAGE[PATH] || (COVERAGE[PATH] = GLOBAL['JSON'].parse(INITIAL))
+  var FILE_COVERAGE
+  function COVER () {
+    if (!FILE_COVERAGE) FILE_COVERAGE = GET_INITIAL_FILE_COVERAGE()
+    return FILE_COVERAGE
+  }
+  function GET_INITIAL_FILE_COVERAGE () {
+    var global = (new Function('return this'))()
+    var coverage = global['__coverage__'] || (global['__coverage__'] = { })
+    return coverage[PATH] || (coverage[PATH] = global['JSON'].parse(INITIAL))
+  }
 `)
 
 //
@@ -38,7 +45,6 @@ module.exports = function ({ types: t }) {
     return context.file.__coverage__data || (context.file.__coverage__data = {
       //
       // Initial data that will be added in front of generated source code
-      //
       base: {
         path: path,
         s: { },
@@ -54,7 +60,10 @@ module.exports = function ({ types: t }) {
         s: 1,
         b: 1,
         f: 1
-      }
+      },
+      //
+      // True if coverage info is already emitted.
+      sealed: false
     })
   }
 
@@ -87,7 +96,7 @@ module.exports = function ({ types: t }) {
     return t.unaryExpression('++',
       wrap(
         t.memberExpression(
-          t.memberExpression(getData(context).id, t.identifier(type)),
+          t.memberExpression(t.callExpression(getData(context).id, [ ]), t.identifier(type)),
           t.stringLiteral(id),
           true
         )
@@ -304,13 +313,20 @@ module.exports = function ({ types: t }) {
     instrumentStatement(this, path.get('right'))
   }
 
+  // If the coverage for this file is sealed, make the guarded function noop.
+  // It is here to fix some very weird edge case in `fixtures/imports.js`
+  const guard = f => function (path) {
+    if (getData(this).sealed) return
+    return f.call(this, path)
+  }
+
   const coverWith = (process.env.BABEL_PLUGIN__COVERAGE__TEST
     // Defer execution so we can measure coverage easily.
-    ? f => function () { return f().apply(this, arguments) }
+    ? f => guard(function () { return f().apply(this, arguments) })
     // Execute immediately so it runs faster at runtime.
     // NOTE: This case should have already been covered due to
     //       self-instrumentation to generate `lib-cov`.
-    : f => f()
+    : f => guard(f())
   )
 
   return {
@@ -345,15 +361,16 @@ module.exports = function ({ types: t }) {
       Program: {
         enter (path) {
           // Save the variable name used for tracking coverage.
-          getData(this).id = path.scope.generateUidIdentifier('__coverage__file')
+          getData(this).id = path.scope.generateUidIdentifier('__cover__')
         },
         exit (path) {
           // Prepends the coverage runtime.
           const realPath = getRealpath(this.file.opts.filename)
+          getData(this).sealed = true
           path.node.body.unshift(...coverageTemplate({
-            GLOBAL: path.scope.generateUidIdentifier('__coverage__global'),
-            COVERAGE: path.scope.generateUidIdentifier('__coverage__object'),
-            FILE_COVERAGE: getData(this).id,
+            GET_INITIAL_FILE_COVERAGE: path.scope.generateUidIdentifier('__coverage__getInitialState'),
+            FILE_COVERAGE: path.scope.generateUidIdentifier('__coverage__file'),
+            COVER: getData(this).id,
             PATH: t.stringLiteral(realPath),
             INITIAL: t.stringLiteral(JSON.stringify(getData(this).base))
           }))
