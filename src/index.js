@@ -45,7 +45,6 @@ module.exports = function ({ types: t }) {
     return context.file.__coverage__data || (context.file.__coverage__data = {
       //
       // Initial data that will be added in front of generated source code
-      //
       base: {
         path: path,
         s: { },
@@ -61,7 +60,10 @@ module.exports = function ({ types: t }) {
         s: 1,
         b: 1,
         f: 1
-      }
+      },
+      //
+      // True if coverage info is already emitted.
+      sealed: false
     })
   }
 
@@ -311,13 +313,20 @@ module.exports = function ({ types: t }) {
     instrumentStatement(this, path.get('right'))
   }
 
+  // If the coverage for this file is sealed, make the guarded function noop.
+  // It is here to fix some very weird edge case in `fixtures/imports.js`
+  const guard = f => function (path) {
+    if (getData(this).sealed) return
+    return f.call(this, path)
+  }
+
   const coverWith = (process.env.BABEL_PLUGIN__COVERAGE__TEST
     // Defer execution so we can measure coverage easily.
-    ? f => function () { return f().apply(this, arguments) }
+    ? f => guard(function () { return f().apply(this, arguments) })
     // Execute immediately so it runs faster at runtime.
     // NOTE: This case should have already been covered due to
     //       self-instrumentation to generate `lib-cov`.
-    : f => f()
+    : f => guard(f())
   )
 
   return {
@@ -357,6 +366,7 @@ module.exports = function ({ types: t }) {
         exit (path) {
           // Prepends the coverage runtime.
           const realPath = getRealpath(this.file.opts.filename)
+          getData(this).sealed = true
           path.node.body.unshift(...coverageTemplate({
             GET_INITIAL_FILE_COVERAGE: path.scope.generateUidIdentifier('__coverage__getInitialState'),
             FILE_COVERAGE: path.scope.generateUidIdentifier('__coverage__file'),

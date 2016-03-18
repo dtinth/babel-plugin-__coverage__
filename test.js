@@ -75,6 +75,10 @@ describe('test', function () {
       require('./fixtures/arrows')
     })
 
+    it('can run es6 modules with bare import', function () {
+      require('./fixtures/imports')
+    })
+
     it('can haz defualt paramitrz', function () {
       const lib = require('./fixtures/default')
       lib.add(10, 20)
