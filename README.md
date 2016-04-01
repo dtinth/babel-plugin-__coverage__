@@ -54,6 +54,21 @@ Configure Mocha to transpile JavaScript code using Babel, then you can run your 
   },
 ```
 
+## Ignoring files
+
+You don't want to cover your test files as this will skew your coverage results. You can configure this by configuring the plugin like so:
+
+```js
+"plugins": [ [ "__coverage__", { "ignore": "test/" } ] ]
+```
+
+Where `ignore` is a [glob pattern](https://www.npmjs.com/package/minimatch).
+
+Alternatively, you can specify `only` which will take precedence over `ignore`:
+
+```js
+"plugins": [ [ "__coverage__", { "only": "src/" } ] ]
+```
 
 ## Canned Answers
 
@@ -145,15 +160,3 @@ Here are some notable differences:
 
 I haven’t implemented it. I once [posted an issue on Isparta](https://github.com/douglasduteil/isparta/issues/24) asking about ignoring statements in Isparta (which is now fixed). But nowadays I just think that “coverage is just a number,” so I don’t need them anymore. If you want it, pull requests are welcome!
 
-
-
-### How do I ignore certain files?
-
-Well, [Codecov](https://codecov.io/) allows you to ignore files from their web interface, so if you’re using that, then that’s the easiest way!
-
-If you use webpack, you can set up two loaders.
-One for your production code (with this plugin enabled), and another for your test code (without this plugin).
-
-And if you’re using Babel, you can precompile your production code with coverage enabled into another directory like `babel src --plugins __coverage__ -d lib-cov` and tell your tests to redirect to that instead.
-
-But if you’re using something like `browserify` or `babel-register` where you can only enable or disable this plugin for every source file, then sorry, I haven’t implemented it yet, because I don’t need it now. If you want it, pull requests are welcome!
