@@ -8,7 +8,7 @@ describe('test', function () {
   const __coverage__Plugin = require('./lib-cov')
   const BABEL_OPTIONS = {
     presets: [ 'es2015', 'react' ],
-    plugins: [ __coverage__Plugin ],
+    plugins: [ [ __coverage__Plugin, { ignore: 'ignored' } ] ],
     babelrc: false
   }
   const Babel = require('babel-core')
@@ -100,6 +100,31 @@ describe('test', function () {
     it('works with label statement', function () {
       assert.equal(require('./fixtures/label'), 1)
     })
+
+    it('ignores files excluded by `ignore` option', function () {
+      const code = transpileFile('./fixtures/ignored', { ignore: 'ignored' })
+      assert.ok(!codeIsCovered(code))
+    })
+
+    it('includes files not matched by `ignore` option', function () {
+      const code = transpileFile('./fixtures/only', { ignore: 'ignored' })
+      assert.ok(codeIsCovered(code))
+    })
+
+    it('instruments files included by `only`', function () {
+      const code = transpileFile('./fixtures/only', { only: 'only' })
+      assert.ok(codeIsCovered(code))
+    })
+
+    it('ignores files not included by `only`', function () {
+      const code = transpileFile('./fixtures/ignored', { only: 'only' })
+      assert.ok(!codeIsCovered(code))
+    })
+
+    it('favors only over ignore', function () {
+      const code = transpileFile('./fixtures/only', { only: 'only', ignore: 'only' })
+      assert.ok(codeIsCovered(code))
+    })
   })
 
   // ---------------------------------------------------------------------------
@@ -131,5 +156,17 @@ describe('test', function () {
       babelrc: false,
       plugins: [ __coverage__Plugin ]
     }).code
+  }
+
+  function transpileFile (filename, pluginOptions) {
+    return Babel.transformFileSync(require.resolve(filename), {
+      presets: [ 'es2015' ],
+      plugins: [ [ __coverage__Plugin, pluginOptions ] ],
+      babelrc: false
+    }).code
+  }
+
+  function codeIsCovered (code) {
+    return code.indexOf('_cover__') !== -1
   }
 })

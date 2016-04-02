@@ -4,6 +4,7 @@
 // This is my first Babel plugin, and I wrote it during the night.
 // Therefore, be prepared to see a lot of copypasta and wtf code.
 
+import { util } from 'babel-core'
 import template from 'babel-template'
 import nameFunction from 'babel-helper-function-name'
 import { realpathSync } from 'fs'
@@ -31,6 +32,24 @@ function getRealpath (n) {
   } catch (e) {
     return n
   }
+}
+
+/**
+ * This determines whether the given state and options combination
+ * should result in the file being ignored and not covered
+ * Big thanks to babel-plugin-transform-adana and their CC0-1.0 license
+ * from which this code was mostly copy/pasted
+ */
+function skip ({ opts, file } = { }) {
+  if (file && opts) {
+    const { ignore = [], only } = opts
+    return util.shouldIgnore(
+      file.opts.filename,
+      util.arrayify(ignore, util.regexify),
+      only ? util.arrayify(only, util.regexify) : null
+    )
+  }
+  return false
 }
 
 module.exports = function ({ types: t }) {
@@ -315,7 +334,8 @@ module.exports = function ({ types: t }) {
 
   // If the coverage for this file is sealed, make the guarded function noop.
   // It is here to fix some very weird edge case in `fixtures/imports.js`
-  const guard = f => function (path) {
+  const guard = f => function (path, state) {
+    if (skip(state)) return
     if (getData(this).sealed) return
     return f.call(this, path)
   }
@@ -359,11 +379,13 @@ module.exports = function ({ types: t }) {
       ExportDefaultDeclaration: coverWith(() => coverStatement),
 
       Program: {
-        enter (path) {
+        enter (path, state) {
+          if (skip(state)) return
           // Save the variable name used for tracking coverage.
           getData(this).id = path.scope.generateUidIdentifier('__cover__')
         },
-        exit (path) {
+        exit (path, state) {
+          if (skip(state)) return
           // Prepends the coverage runtime.
           const realPath = getRealpath(this.file.opts.filename)
           getData(this).sealed = true
