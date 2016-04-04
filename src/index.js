@@ -18,7 +18,7 @@ const coverageTemplate = template(`
   function GET_INITIAL_FILE_COVERAGE () {
     var global = (new Function('return this'))()
     var coverage = global['__coverage__'] || (global['__coverage__'] = { })
-    return coverage[PATH] || (coverage[PATH] = global['JSON'].parse(INITIAL))
+    return coverage[PATH] = global['JSON'].parse(INITIAL)
   }
 `)
 
