@@ -109,8 +109,8 @@ module.exports = function ({ types: t }) {
   function increase (context, type, id, index) {
     const wrap = (index != null
       // If `index` present, turn `x` into `x[index]`.
-      ? x => t.memberExpression(x, t.numericLiteral(index), true)
-      : x => x
+      ? (x) => t.memberExpression(x, t.numericLiteral(index), true)
+      : (x) => x
     )
     return t.unaryExpression('++',
       wrap(
@@ -231,8 +231,8 @@ module.exports = function ({ types: t }) {
   function coverSwitchStatement (path) {
     if (!path.node.loc) return
     instrumentStatement(this, path)
-    const validCases = path.get('cases').filter(p => p.node.loc)
-    const id = nextBranchId(this, path.node.loc.start.line, 'switch', validCases.map(p => p.node.loc))
+    const validCases = path.get('cases').filter((p) => p.node.loc)
+    const id = nextBranchId(this, path.node.loc.start.line, 'switch', validCases.map((p) => p.node.loc))
     let index = 0
     for (const p of validCases) {
       if (p.node.test) {
@@ -269,7 +269,7 @@ module.exports = function ({ types: t }) {
     const node = path.node
     const data = getData(this)
     const id = String(data.nextId.f++)
-    const nameOf = namedNode => namedNode && namedNode.id && namedNode.id.name || null
+    const nameOf = (namedNode) => namedNode && namedNode.id && namedNode.id.name || null
     data.base.f[id] = 0
     data.base.fnMap[id] = {
       name: nameOf(nameFunction(path)), // I love Babel!
@@ -334,7 +334,7 @@ module.exports = function ({ types: t }) {
 
   // If the coverage for this file is sealed, make the guarded function noop.
   // It is here to fix some very weird edge case in `fixtures/imports.js`
-  const guard = f => function (path, state) {
+  const guard = (f) => function (path, state) {
     if (skip(state)) return
     if (getData(this).sealed) return
     return f.call(this, path)
@@ -342,11 +342,11 @@ module.exports = function ({ types: t }) {
 
   const coverWith = (process.env.BABEL_PLUGIN__COVERAGE__TEST
     // Defer execution so we can measure coverage easily.
-    ? f => guard(function () { return f().apply(this, arguments) })
+    ? (f) => guard(function () { return f().apply(this, arguments) })
     // Execute immediately so it runs faster at runtime.
     // NOTE: This case should have already been covered due to
     //       self-instrumentation to generate `lib-cov`.
-    : f => guard(f())
+    : (f) => guard(f())
   )
 
   return {
