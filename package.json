@@ -4,11 +4,15 @@
   "description": "Babel 6.x plugin to add instrument code with Istanbul-compatible `__coverage__` variable.",
   "main": "lib/index.js",
   "scripts": {
-    "build": "NODE_ENV=development ./node_modules/.bin/babel src -d lib",
-    "clean": "rm -rf lib; rm -rf lib-cov",
-    "mocha": "env NODE_ENV=test BABEL_PLUGIN__COVERAGE__TEST=1 nyc -r lcov -r text mocha",
-    "prepublish": "npm run clean && npm run build",
-    "test": "npm run clean && npm run build && env BABEL_DISABLE_CACHE=1 ./node_modules/.bin/babel src --plugins $(pwd)/lib/index -d lib-cov && npm run mocha"
+    "prebuild": "npm run clean",
+    "build": "cross-env NODE_ENV=development babel src -d lib",
+    "clean": "rimraf lib/ lib-cov/",
+    "lint": "standard src/** test.js",
+    "premocha": "cross-env BABEL_DISABLE_CACHE=1 babel src --plugins $(pwd)/lib/index -d lib-cov",
+    "mocha": "cross-env NODE_ENV=test BABEL_PLUGIN__COVERAGE__TEST=1 nyc -r lcov -r text mocha",
+    "prepublish": "npm test",
+    "pretest": "npm run lint && npm run build",
+    "test": "npm run mocha"
   },
   "author": "Thai Pangsakulyanont <org.yi.dttvb@gmail.com> (http://dt.in.th/)",
   "license": "MIT",
@@ -28,11 +32,13 @@
     "babel-preset-react": "^6.5.0",
     "babel-register": "^6.5.2",
     "codecov": "^1.0.1",
+    "cross-env": "^1.0.7",
     "istanbul": "^0.4.2",
     "mocha": "^2.4.5",
     "nyc": "^6.1.1",
     "react": "^15.0.0",
     "react-dom": "^15.0.0",
+    "rimraf": "^2.5.2",
     "standard": "^6.0.7"
   },
   "dependencies": {
