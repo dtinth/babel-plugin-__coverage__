@@ -3,8 +3,10 @@
 =============================
 
 [![npm version](https://badge.fury.io/js/babel-plugin-__coverage__.svg)](https://badge.fury.io/js/babel-plugin-__coverage__)
+[![npm downloads](https://img.shields.io/npm/dm/babel-plugin-__coverage__.svg)](https://www.npmjs.com/package/babel-plugin-__coverage__)
 [![Build Status](https://travis-ci.org/dtinth/babel-plugin-__coverage__.svg?branch=master)](https://travis-ci.org/dtinth/babel-plugin-__coverage__)
 [![codecov.io](https://codecov.io/github/dtinth/babel-plugin-__coverage__/coverage.svg?branch=master)](https://codecov.io/github/dtinth/babel-plugin-__coverage__?branch=master)
+![MIT Licensed](https://img.shields.io/badge/license-MIT%20License-blue.svg)
 
 A Babel plugin that instruments your code with `__coverage__` variable.
 The resulting `__coverage__` object is compatible with Istanbul, which means it can instantly be used with [karma-coverage](https://github.com/karma-runner/karma-coverage) and mocha on Node.js (through [nyc](https://github.com/bcoe/nyc)).
