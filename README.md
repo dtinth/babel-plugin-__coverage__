@@ -74,6 +74,8 @@ Alternatively, you can specify `only` which will take precedence over `ignore`:
 
 ### There’s already Isparta. Why another coverage tool?
 
+> __Note:__ Some text in this section is outdated and I say this instead of keeping this section up-to-date lol. So [Isparta is now unmaintained](https://github.com/douglasduteil/isparta/commit/7e89d4e467f54558396533462122e73ea4e9dc31) and [a new version of Istanbul](https://github.com/istanbuljs/istanbul-lib-source-maps) that supports arbitrary compile-to-JS language is coming…
+
 Isparta is currently the de-facto tool for measuring coverage against ES6 code, which extends Istanbul with ES6 support through Babel. It works very well so far, but then I hit some walls with it.
 
 So I’ve been trying to get webpack 2 to work with Istanbul/Isparta.
@@ -105,6 +107,8 @@ Well, I wrote most of it in two nights and have only tested some basic stuffs.
 So speaking in terms of maturity, this one is very new.
 
 However, I tried using this in some bigger projects, such as [bemusic/bemuse](https://github.com/bemusic/bemuse) (which contains around 2400 statements). It works, with only few problems (which have now been fixed), and now it works fine.
+
+__Note:__ If you’re using babel-plugin-\_\_coverage\_\_ inside a larger-scale application, feel free to send pull request and update this section kthx!
 
 
 ### Is the resulting coverage differ from Istanbul/Isparta?
