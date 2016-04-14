@@ -1,6 +1,6 @@
 'use strict'
 
-/* global describe, it */
+/* global describe, it, __coverage__ */
 /* eslint no-eval: 0 */
 const assert = require('assert')
 
@@ -125,6 +125,69 @@ describe('test', function () {
       const code = transpileFile('./fixtures/only', { only: 'only', ignore: 'only' })
       assert.ok(codeIsCovered(code))
     })
+
+    // Need this test because some source files may be differented bundles
+    // but executed in the same execution context (same page).
+    //
+    // For a real-world case see:
+    //
+    //     https://github.com/dtinth/babel-plugin-__coverage__/issues/8
+    //
+    it('shalt not disregard previous coverage data if the code is the same', function () {
+      try {
+        {
+          const instrumentedCode = instrument(
+            'var a = 1',
+            '/tests/no_override'
+          )
+          eval(instrumentedCode)
+          assert.equal(__coverage__['/tests/no_override'].s['1'], 1)
+          assert.equal(__coverage__['/tests/no_override'].s['2'], undefined)
+        }
+        {
+          const instrumentedCode = instrument(
+            'var a = 1',
+            '/tests/no_override'
+          )
+          eval(instrumentedCode)
+          assert.equal(__coverage__['/tests/no_override'].s['1'], 2)
+        }
+      } finally {
+        delete __coverage__['/tests/no_override']
+      }
+    })
+
+    // Need this test because some source files may be hot-reloaded.
+    // This makes the coverage data out of sync and leads to run-time errors :(
+    //
+    // For a real-world case see:
+    //
+    //     https://github.com/dtinth/babel-plugin-__coverage__/issues/8#issuecomment-209548685
+    //
+    it('shall supersede old coverage object when code is changed', function () {
+      try {
+        {
+          const instrumentedCode = instrument(
+            'var a = 1',
+            '/tests/yes_override'
+          )
+          eval(instrumentedCode)
+          assert.equal(__coverage__['/tests/yes_override'].s['1'], 1)
+          assert.equal(__coverage__['/tests/yes_override'].s['2'], undefined)
+        }
+        {
+          const instrumentedCode = instrument(
+            'var a = 1; var b = 1',
+            '/tests/yes_override'
+          )
+          eval(instrumentedCode)
+          assert.equal(__coverage__['/tests/yes_override'].s['1'], 1)
+          assert.equal(__coverage__['/tests/yes_override'].s['2'], 1)
+        }
+      } finally {
+        delete __coverage__['/tests/yes_override']
+      }
+    })
   })
 
   // ---------------------------------------------------------------------------
@@ -151,10 +214,11 @@ describe('test', function () {
     }
   }
 
-  function instrument (code) {
+  function instrument (code, filename) {
     return Babel.transform(code, {
       babelrc: false,
-      plugins: [ __coverage__Plugin ]
+      plugins: [ __coverage__Plugin ],
+      filename: filename
     }).code
   }
 

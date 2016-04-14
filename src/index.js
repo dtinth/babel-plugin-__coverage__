@@ -8,6 +8,7 @@ import { util } from 'babel-core'
 import template from 'babel-template'
 import nameFunction from 'babel-helper-function-name'
 import { realpathSync } from 'fs'
+import { createHash } from 'crypto'
 
 const coverageTemplate = template(`
   var FILE_COVERAGE
@@ -16,9 +17,13 @@ const coverageTemplate = template(`
     return FILE_COVERAGE
   }
   function GET_INITIAL_FILE_COVERAGE () {
+    var path = PATH, hash = HASH
     var global = (new Function('return this'))()
     var coverage = global['__coverage__'] || (global['__coverage__'] = { })
-    return coverage[PATH] = global['JSON'].parse(INITIAL)
+    if (coverage[path] && coverage[path].hash === hash) return coverage[path]
+    var coverageData = global['JSON'].parse(INITIAL)
+    coverageData.hash = hash
+    return coverage[path] = coverageData
   }
 `)
 
@@ -388,13 +393,16 @@ module.exports = function ({ types: t }) {
           if (skip(state)) return
           // Prepends the coverage runtime.
           const realPath = getRealpath(this.file.opts.filename)
+          const initialJson = JSON.stringify(getData(this).base)
+          const hash = createHash('md5').update(initialJson).digest('hex')
           getData(this).sealed = true
           path.node.body.unshift(...coverageTemplate({
             GET_INITIAL_FILE_COVERAGE: path.scope.generateUidIdentifier('__coverage__getInitialState'),
             FILE_COVERAGE: path.scope.generateUidIdentifier('__coverage__file'),
             COVER: getData(this).id,
             PATH: t.stringLiteral(realPath),
-            INITIAL: t.stringLiteral(JSON.stringify(getData(this).base))
+            INITIAL: t.stringLiteral(initialJson),
+            HASH: t.stringLiteral(hash)
           }))
         }
       }
