@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "babel-helper-function-name": "^6.5.0",
-    "babel-template": "^6.5.0"
+    "babel-template": "^6.7.0"
   },
   "repository": {
     "type": "git",
