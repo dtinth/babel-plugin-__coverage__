@@ -239,12 +239,12 @@ module.exports = function ({ types: t }) {
     const validCases = path.get('cases').filter((p) => p.node.loc)
     const id = nextBranchId(this, path.node.loc.start.line, 'switch', validCases.map((p) => p.node.loc))
     let index = 0
-    for (const p of validCases) {
+    validCases.forEach(p => {
       if (p.node.test) {
         instrumentStatement(this, p.get('test'))
       }
       p.node.consequent.unshift(increase(this, 'b', id, index++))
-    }
+    })
   }
 
   //
