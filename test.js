@@ -5,10 +5,10 @@
 const assert = require('assert')
 
 describe('test', function () {
-  const __coverage__Plugin = require('./lib-cov')
+  const coveragePlugin = require('./lib-cov')
   const BABEL_OPTIONS = {
     presets: [ 'es2015', 'react' ],
-    plugins: [ [ __coverage__Plugin, { ignore: 'ignored' } ] ],
+    plugins: [ [ coveragePlugin, { ignore: 'ignored' } ] ],
     babelrc: false
   }
   const Babel = require('babel-core')
@@ -217,7 +217,7 @@ describe('test', function () {
   function instrument (code, filename) {
     return Babel.transform(code, {
       babelrc: false,
-      plugins: [ __coverage__Plugin ],
+      plugins: [ coveragePlugin ],
       filename: filename
     }).code
   }
@@ -225,7 +225,7 @@ describe('test', function () {
   function transpileFile (filename, pluginOptions) {
     return Babel.transformFileSync(require.resolve(filename), {
       presets: [ 'es2015' ],
-      plugins: [ [ __coverage__Plugin, pluginOptions ] ],
+      plugins: [ [ coveragePlugin, pluginOptions ] ],
       babelrc: false
     }).code
   }
