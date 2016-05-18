@@ -60,6 +60,12 @@ describe('test', function () {
       testStatementCoverage('while (x) if (y) break', 3)
       testStatementCoverage('for (a; b; c) if (y) break', 4)
     })
+
+    describe('ignore', function () {
+      testIgnore('/* istanbul ignore if */ if (1 > 2) { a++ }', 2)
+      testIgnore('/* istanbul ignore else */ if (1 > 2) { a++ } else { a-- }', 3)
+      testIgnore('/* istanbul ignore next */ if (1 > 2) { a++ } else { a-- }', [2, 3])
+    })
   })
 
   describe('integrated tests', function () {
@@ -198,6 +204,19 @@ describe('test', function () {
     it('`' + code + '` -> ' + expected, function () {
       const coverageData = extractCoverageData(code).s
       assert.equal(Object.keys(coverageData).length, expected)
+    })
+  }
+
+  function testIgnore (code, statementId) {
+    it('`' + code + '` -> ' + statementId, function () {
+      const map = extractCoverageData(code).statementMap
+      if (Array.isArray(statementId)) {
+        statementId.forEach(function (id) {
+          assert.ok(map[id].skip)
+        })
+      } else {
+        assert.ok(map[statementId].skip)
+      }
     })
   }
 

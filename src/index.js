@@ -10,6 +10,8 @@ import nameFunction from 'babel-helper-function-name'
 import { realpathSync } from 'fs'
 import { createHash } from 'crypto'
 
+const ignoreRE = /(?:coverage|istanbul) ignore (next|if|else)/
+
 const coverageTemplate = template(`
   var FILE_COVERAGE
   function COVER () {
@@ -87,7 +89,9 @@ module.exports = function ({ types: t }) {
       },
       //
       // True if coverage info is already emitted.
-      sealed: false
+      sealed: false,
+      // Ignore zone information
+      ignoreZones: []
     })
   }
 
@@ -161,29 +165,96 @@ module.exports = function ({ types: t }) {
     if (node.__coverage__instrumented) return
     node.__coverage__instrumented = true
 
-    const id = nextStatementId(context, node.loc)
+    const id = nextStatementId(context, path)
     instrument(path, increase(context, 's', id))
+  }
+
+  //
+  // check a path to see if it has a ignore comment
+  // set the zone
+  //
+  function checkIgnoredPath (path, data) {
+    path.node.leadingComments && path.node.leadingComments.some((comment) => {
+      const match = String(comment.value).match(ignoreRE)
+      if (match) {
+        const type = match[1]
+        if (type === 'next') {
+          data.ignoreZones.push({
+            type,
+            start: path.node.start,
+            end: path.node.end
+          })
+        } else if (path.isIfStatement()) {
+          let childPath
+          if (type === 'if' && (childPath = path.get('consequent'))) {
+            data.ignoreZones.push({
+              type,
+              start: childPath.node.start,
+              end: childPath.node.end
+            })
+          } else if (type === 'else' && (childPath = path.get('alternate'))) {
+            data.ignoreZones.push({
+              type,
+              start: childPath.node.start,
+              end: childPath.node.end
+            })
+          }
+        }
+        return true
+      }
+    })
+  }
+
+  //
+  // check if a path is within an ignore zone
+  //
+  function getIgnoreZoneType (path, data) {
+    let type
+    data.ignoreZones.some((zone) => {
+      if (zone.start <= path.node.start && zone.end >= path.node.end) {
+        type = zone.type
+        return true
+      }
+    })
+    return type
   }
 
   //
   // Returns the next statement ID.
   //
-  function nextStatementId (context, loc) {
+  function nextStatementId (context, path) {
     const data = getData(context)
     const id = String(data.nextId.s++)
     data.base.s[id] = 0
-    data.base.statementMap[id] = locToObject(loc)
+    data.base.statementMap[id] = locToObject(path.node.loc)
+    if (getIgnoreZoneType(path, data)) {
+      data.base.statementMap[id].skip = true
+    }
     return id
   }
 
   //
   // Returns the next branch ID and adds the information to `branchMap` object.
   //
-  function nextBranchId (context, line, type, locations) {
+  function nextBranchId (context, path, type, locations) {
+    const line = path.node.loc.start.line
     const data = getData(context)
     const id = String(data.nextId.b++)
     data.base.b[id] = locations.map(() => 0)
-    data.base.branchMap[id] = { line, type, locations: locations.map(locToObject) }
+    const branch = data.base.branchMap[id] = { line, type, locations: locations.map(locToObject) }
+    if (getIgnoreZoneType(path, data) === 'next') {
+      branch.locations.forEach(loc => {
+        loc.skip = true
+      })
+    } else if (path.isIfStatement()) {
+      let childPath
+      if ((childPath = path.get('consequent')) && getIgnoreZoneType(childPath, data) === 'if') {
+        branch.locations[0].skip = true
+      }
+      if ((childPath = path.get('alternate')) && getIgnoreZoneType(childPath, data) === 'else') {
+        branch.locations[1].skip = true
+      }
+    }
     return id
   }
 
@@ -212,7 +283,7 @@ module.exports = function ({ types: t }) {
     makeBlock(path.get('alternate'))
     const loc1 = node.consequent && node.consequent.loc || loc0
     const loc2 = node.alternate && node.alternate.loc || loc1
-    const id = nextBranchId(this, loc0.start.line, 'if', [ loc1, loc2 ])
+    const id = nextBranchId(this, path, 'if', [ loc1, loc2 ])
     instrument(path.get('consequent'), increase(this, 'b', id, 0))
     instrument(path.get('alternate'), increase(this, 'b', id, 1))
     instrumentStatement(this, path)
@@ -237,7 +308,7 @@ module.exports = function ({ types: t }) {
     if (!path.node.loc) return
     instrumentStatement(this, path)
     const validCases = path.get('cases').filter((p) => p.node.loc)
-    const id = nextBranchId(this, path.node.loc.start.line, 'switch', validCases.map((p) => p.node.loc))
+    const id = nextBranchId(this, path, 'switch', validCases.map((p) => p.node.loc))
     let index = 0
     validCases.forEach(p => {
       if (p.node.test) {
@@ -281,12 +352,15 @@ module.exports = function ({ types: t }) {
       line: node.loc.start.line,
       loc: locToObject(node.loc)
     }
+    if (getIgnoreZoneType(path, data)) {
+      data.base.fnMap[id].skip = true
+    }
     const increment = increase(this, 'f', id)
     const body = path.get('body')
     if (body.isBlockStatement()) {
       body.node.body.unshift(t.expressionStatement(increment))
     } else if (body.isExpression()) {
-      const sid = nextStatementId(this, body.node.loc || path.node.loc)
+      const sid = nextStatementId(this, body)
       body.replaceWith(t.sequenceExpression([
         increment,
         increase(this, 's', sid),
@@ -308,15 +382,14 @@ module.exports = function ({ types: t }) {
       const node = path.node
       const loc1 = node.consequent.loc || node.loc
       const loc2 = node.alternate.loc || loc1
-      const id = nextBranchId(this, node.loc.start.line, 'cond-expr', [ loc1, loc2 ])
+      const id = nextBranchId(this, path, 'cond-expr', [ loc1, loc2 ])
       instrument(path.get('consequent'), increase(this, 'b', id, 0))
       instrument(path.get('alternate'), increase(this, 'b', id, 1))
     }
   }
 
   //
-  // `a || b` => `a || (++coverage, b)`. Required due to short circuiting.
-  // Also adds branch coverage.
+  // Adds branch coverage.
   //
   function coverLogicalExpression (path) {
     instrumentStatement(this, path.get('right'))
@@ -324,7 +397,7 @@ module.exports = function ({ types: t }) {
     const node = path.node
     const loc1 = node.left.loc || node.loc
     const loc2 = node.right.loc || loc1
-    const id = nextBranchId(this, node.loc.start.line, 'binary-expr', [ loc1, loc2 ])
+    const id = nextBranchId(this, path, 'binary-expr', [ loc1, loc2 ])
     instrument(path.get('left'), increase(this, 'b', id, 0))
     instrument(path.get('right'), increase(this, 'b', id, 1))
   }
@@ -342,6 +415,7 @@ module.exports = function ({ types: t }) {
   const guard = (f) => function (path, state) {
     if (skip(state)) return
     if (getData(this).sealed) return
+    checkIgnoredPath(path, getData(this))
     return f.call(this, path)
   }
 
