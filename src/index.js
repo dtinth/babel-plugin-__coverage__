@@ -25,6 +25,7 @@ const coverageTemplate = template(`
     coverageData.hash = hash
     return coverage[path] = coverageData
   }
+  COVER ()
 `)
 
 //
