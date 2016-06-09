@@ -9,6 +9,8 @@ import template from 'babel-template'
 import nameFunction from 'babel-helper-function-name'
 import { realpathSync } from 'fs'
 import { createHash } from 'crypto'
+import testExclude from 'test-exclude'
+import requireMainFilename from 'require-main-filename'
 
 const coverageTemplate = template(`
   var FILE_COVERAGE
@@ -29,6 +31,23 @@ const coverageTemplate = template(`
 `)
 
 //
+// support nyc's include/exclude logic when
+// provided as config in package.json.
+//
+let exclude
+function nycShouldInstrument (filename) {
+  if (!exclude) {
+    exclude = testExclude({
+      configKey: 'nyc',
+      configPath: requireMainFilename(require)
+    })
+  }
+
+  if (!exclude.configFound) return true
+  else return exclude.shouldInstrument(filename)
+}
+
+//
 // Takes a relative path and returns a real path.
 // Assumes the path name is relative to working directory.
 //
@@ -47,15 +66,18 @@ function getRealpath (n) {
  * from which this code was mostly copy/pasted
  */
 function skip ({ opts, file } = { }) {
+  let shouldSkip = false
+
   if (file && opts) {
     const { ignore = [], only } = opts
-    return util.shouldIgnore(
+    shouldSkip = util.shouldIgnore(
       file.opts.filename,
       util.arrayify(ignore, util.regexify),
       only ? util.arrayify(only, util.regexify) : null
     )
   }
-  return false
+
+  return shouldSkip || !nycShouldInstrument(file.opts.filename)
 }
 
 module.exports = function ({ types: t }) {
