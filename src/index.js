@@ -10,7 +10,6 @@ import nameFunction from 'babel-helper-function-name'
 import { realpathSync } from 'fs'
 import { createHash } from 'crypto'
 import testExclude from 'test-exclude'
-import requireMainFilename from 'require-main-filename'
 
 const coverageTemplate = template(`
   var FILE_COVERAGE
@@ -39,7 +38,7 @@ function nycShouldInstrument (filename) {
   if (!exclude) {
     exclude = testExclude({
       configKey: 'nyc',
-      configPath: requireMainFilename(require)
+      configPath: process.cwd()
     })
   }
 
