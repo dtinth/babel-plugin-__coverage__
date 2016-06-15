@@ -15,7 +15,7 @@ __Note:__ This plugin does not generate any report or save any data to any file;
 it only adds instrumenting code to your JavaScript source code.
 To integrate with testing tools, please see the [Integrations](#integrations) section.
 
-> __News:__ For `nyc` users, this release is a breaking change. See [release notes](https://github.com/dtinth/babel-plugin-__coverage__/releases/tag/v11.0.0) for more details.
+> __News:__ For `nyc` users, v11.0.0 is a breaking change from v1.11.111. See [release notes](https://github.com/dtinth/babel-plugin-__coverage__/releases/tag/v11.0.0) for more details.
 
 
 ## Usage
