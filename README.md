@@ -15,6 +15,8 @@ __Note:__ This plugin does not generate any report or save any data to any file;
 it only adds instrumenting code to your JavaScript source code.
 To integrate with testing tools, please see the [Integrations](#integrations) section.
 
+> __News:__ For `nyc` users, this release is a breaking change. See [release notes](https://github.com/dtinth/babel-plugin-__coverage__/releases/tag/v11.0.0) for more details.
+
 
 ## Usage
 
@@ -48,13 +50,18 @@ It has been tested with [bemusic/bemuse](https://codecov.io/github/bemusic/bemus
 
 ### mocha on node.js (through nyc)
 
-Configure Mocha to transpile JavaScript code using Babel, then you can run your tests with [`nyc`](https://github.com/bcoe/nyc), which will collect all the coverage report. You need to __configure NYC not to instrument your code__ by setting this in your `package.json`:
+Configure Mocha to transpile JavaScript code using Babel, then you can run your tests with [`nyc`](https://github.com/bcoe/nyc), which will collect all the coverage report.
+
+babel-plugin-\_\_coverage\_\_ respects the `include`/`exclude` configuration options from nyc,
+but you also need to __configure NYC not to instrument your code__ by adding these settings in your `package.json`:
 
 ```js
   "nyc": {
-    "include": [ "/" ]
+    "sourceMap": false,
+    "instrument": false
   },
 ```
+
 
 ## Ignoring files
 
