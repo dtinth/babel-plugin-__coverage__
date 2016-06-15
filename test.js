@@ -138,22 +138,22 @@ describe('test', function () {
         {
           const instrumentedCode = instrument(
             'var a = 1',
-            '/tests/no_override'
+            'tests/no_override.js'
           )
           eval(instrumentedCode)
-          assert.equal(__coverage__['/tests/no_override'].s['1'], 1)
-          assert.equal(__coverage__['/tests/no_override'].s['2'], undefined)
+          assert.equal(__coverage__['tests/no_override.js'].s['1'], 1)
+          assert.equal(__coverage__['tests/no_override.js'].s['2'], undefined)
         }
         {
           const instrumentedCode = instrument(
             'var a = 1',
-            '/tests/no_override'
+            'tests/no_override.js'
           )
           eval(instrumentedCode)
-          assert.equal(__coverage__['/tests/no_override'].s['1'], 2)
+          assert.equal(__coverage__['tests/no_override.js'].s['1'], 2)
         }
       } finally {
-        delete __coverage__['/tests/no_override']
+        delete __coverage__['tests/no_override.js']
       }
     })
 
@@ -169,23 +169,23 @@ describe('test', function () {
         {
           const instrumentedCode = instrument(
             'var a = 1',
-            '/tests/yes_override'
+            'tests/yes_override.js'
           )
           eval(instrumentedCode)
-          assert.equal(__coverage__['/tests/yes_override'].s['1'], 1)
-          assert.equal(__coverage__['/tests/yes_override'].s['2'], undefined)
+          assert.equal(__coverage__['tests/yes_override.js'].s['1'], 1)
+          assert.equal(__coverage__['tests/yes_override.js'].s['2'], undefined)
         }
         {
           const instrumentedCode = instrument(
             'var a = 1; var b = 1',
-            '/tests/yes_override'
+            'tests/yes_override.js'
           )
           eval(instrumentedCode)
-          assert.equal(__coverage__['/tests/yes_override'].s['1'], 1)
-          assert.equal(__coverage__['/tests/yes_override'].s['2'], 1)
+          assert.equal(__coverage__['tests/yes_override.js'].s['1'], 1)
+          assert.equal(__coverage__['tests/yes_override.js'].s['2'], 1)
         }
       } finally {
-        delete __coverage__['/tests/yes_override']
+        delete __coverage__['tests/yes_override.js']
       }
     })
   })
