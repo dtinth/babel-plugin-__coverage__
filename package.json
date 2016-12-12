@@ -29,7 +29,6 @@
   "devDependencies": {
     "babel": "^6.5.2",
     "babel-cli": "^6.5.1",
-    "babel-core": "^6.5.2",
     "babel-preset-es2015": "^6.5.0",
     "babel-preset-react": "^6.5.0",
     "babel-register": "^6.5.2",
@@ -44,6 +43,7 @@
     "standard": "^7.0.0"
   },
   "dependencies": {
+    "babel-core": "^6.5.2",
     "babel-helper-function-name": "^6.5.0",
     "babel-template": "^6.8.0",
     "test-exclude": "^1.1.0"
