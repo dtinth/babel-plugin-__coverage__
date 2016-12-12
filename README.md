@@ -1,3 +1,12 @@
+# UNMAINTAINED
+
+This Babel plugin is [not maintained anymore](http://unmaintained.tech/), sorry.
+
+Please consider checking out [babel-plugin-istanbul](https://github.com/istanbuljs/babel-plugin-istanbul).
+
+Feel free to keep using this plugin if you have difficulty migrating to other solutions, but please keep in mind that no new versions will be published.
+
+--
 
 ![babel-plugin-\_\_coverage\_\_](http://i.imgur.com/WNq6pvg.png)
 =============================
